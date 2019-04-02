@@ -2,7 +2,7 @@
 #define MAINWINDOW_H
 
 #include <QMainWindow>
-#include <QPoint>
+#include <QPointF>
 #include <QColor>
 #include <QGraphicsScene>
 
@@ -33,17 +33,18 @@ private:
         BottomRight = Bottom | Right
     };
 private:
-    inline QPoint mapCoord2Real(int x, int y)
+    inline QPointF mapCoord2Real(double x, double y)
     {
-        return QPoint(x * GRID_UNIT, y * GRID_UNIT);
+        return QPointF(x * GRID_UNIT, y * GRID_UNIT);
     }
     void drawGrid(const QString &from, const QString &to);
     void drawDiagonal(const QString &from, const QString &to);
     void drawVisited(const DiffResult &result);
     void drawDLine(const DiffResult &result);
+    void drawKLine(const QString &from, const QString &to);
     void drawAnswer(const DiffResult &result);
-    void addLine(const QPoint &start, const QPoint &end, const QColor &color = Qt::white, int width = 1, bool hasArrow = false);
-    void addText(const QPoint &pos, const QString &str, TextPos textPos, const QColor &color = Qt::white, int size = TEXT_SIZE);
+    void addLine(const QPointF &start, const QPointF &end, const QColor &color = Qt::white, int width = 1, bool hasArrow = false);
+    void addText(const QPointF &pos, const QString &str, TextPos textPos, const QColor &color = Qt::white, int size = TEXT_SIZE);
 private:
     static const int GRID_UNIT = 80;
     static const int TEXT_SIZE = 20;

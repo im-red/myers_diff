@@ -36,6 +36,7 @@ void MainWindow::on_diffButton_clicked()
     m_scene->update();
     drawGrid(from, to);
     drawDiagonal(from, to);
+    drawKLine(from, to);
     DiffResult result = myersDiff(from, to);
 
     drawVisited(result);
@@ -47,8 +48,8 @@ void MainWindow::drawGrid(const QString &from, const QString &to)
 {
     for (int i = 0; i < from.size() + 1; i++)
     {
-        QPoint start(i, 0);
-        QPoint end(i, to.size());
+        QPointF start(i, 0);
+        QPointF end(i, to.size());
         addLine(start, end);
         if (i != 0)
         {
@@ -57,8 +58,8 @@ void MainWindow::drawGrid(const QString &from, const QString &to)
     }
     for (int i = 0; i < to.size() + 1; i++)
     {
-        QPoint start(0, i);
-        QPoint end(from.size(), i);
+        QPointF start(0, i);
+        QPointF end(from.size(), i);
         addLine(start, end);
         if (i != 0)
         {
@@ -78,8 +79,8 @@ void MainWindow::drawDiagonal(const QString &from, const QString &to)
         {
             if (from[i] == to[j])
             {
-                QPoint start(i, j);
-                QPoint end(i + 1, j + 1);
+                QPointF start(i, j);
+                QPointF end(i + 1, j + 1);
                 addLine(start, end);
             }
         }
@@ -94,8 +95,8 @@ void MainWindow::drawVisited(const DiffResult &result)
         {
             bool midArrow = (snake.start != snake.mid) && (snake.mid == snake.end);
             bool endArrow = snake.mid != snake.end;
-            addLine(QPoint(snake.start.x, snake.start.y), QPoint(snake.mid.x, snake.mid.y), QColor(Qt::blue), 1, midArrow);
-            addLine(QPoint(snake.mid.x, snake.mid.y), QPoint(snake.end.x, snake.end.y), QColor(Qt::blue), 1, endArrow);
+            addLine(QPointF(snake.start.x, snake.start.y), QPointF(snake.mid.x, snake.mid.y), QColor(Qt::blue), 1, midArrow);
+            addLine(QPointF(snake.mid.x, snake.mid.y), QPointF(snake.end.x, snake.end.y), QColor(Qt::blue), 1, endArrow);
         }
     }
 }
@@ -120,12 +121,29 @@ void MainWindow::drawDLine(const DiffResult &result)
                 break;
             }
             firstEnd = points[i + 1];
-            QPoint start(points[i].x, points[i].y);
-            QPoint end(points[i + 1].x, points[i + 1].y);
+            QPointF start(points[i].x, points[i].y);
+            QPointF end(points[i + 1].x, points[i + 1].y);
             addLine(start, end, QColor(Qt::yellow));
         }
 
-        addText(QPoint(firstEnd.x, firstEnd.y), QString("d = %1").arg(d), BottomRight, QColor(Qt::yellow), TEXT_SIZE / 2);
+        addText(QPointF(firstEnd.x, firstEnd.y), QString("d = %1").arg(d), BottomRight, QColor(Qt::yellow), TEXT_SIZE / 2);
+    }
+}
+
+void MainWindow::drawKLine(const QString &from, const QString &to)
+{
+    const int fromLen = from.size();
+    const int toLen = to.size();
+
+    QPointF delta((fromLen + toLen) * 0.5 + 0.5, (fromLen + toLen) * 0.5 + 0.5);
+
+    for (int k = -toLen; k <= fromLen; k++)
+    {
+        QPointF start(k * 0.5, -k * 0.5);
+        QPointF end = start + delta;
+
+        addLine(start, end, QColor(Qt::darkGreen));
+        addText(end, QString("k=%1").arg(k), BottomRight, QColor(Qt::darkGreen), TEXT_SIZE / 2);
     }
 }
 
@@ -135,15 +153,15 @@ void MainWindow::drawAnswer(const DiffResult &result)
     {
         bool midArrow = (snake.start != snake.mid) && (snake.mid == snake.end);
         bool endArrow = snake.mid != snake.end;
-        addLine(QPoint(snake.start.x, snake.start.y), QPoint(snake.mid.x, snake.mid.y), QColor(Qt::red), 2, midArrow);
-        addLine(QPoint(snake.mid.x, snake.mid.y), QPoint(snake.end.x, snake.end.y), QColor(Qt::red), 2, endArrow);
+        addLine(QPointF(snake.start.x, snake.start.y), QPointF(snake.mid.x, snake.mid.y), QColor(Qt::red), 2, midArrow);
+        addLine(QPointF(snake.mid.x, snake.mid.y), QPointF(snake.end.x, snake.end.y), QColor(Qt::red), 2, endArrow);
     }
 }
 
-void MainWindow::addLine(const QPoint &start, const QPoint &end, const QColor &color, int width, bool hasArrow)
+void MainWindow::addLine(const QPointF &start, const QPointF &end, const QColor &color, int width, bool hasArrow)
 {
-    const QPoint realStart = mapCoord2Real(start.x(), start.y());
-    const QPoint realEnd = mapCoord2Real(end.x(), end.y());
+    const QPointF realStart = mapCoord2Real(start.x(), start.y());
+    const QPointF realEnd = mapCoord2Real(end.x(), end.y());
 
     QPen pen(color);
     pen.setWidth(width);
@@ -173,9 +191,9 @@ void MainWindow::addLine(const QPoint &start, const QPoint &end, const QColor &c
     }
 }
 
-void MainWindow::addText(const QPoint &pos, const QString &str, MainWindow::TextPos textPos, const QColor &color, int size)
+void MainWindow::addText(const QPointF &pos, const QString &str, MainWindow::TextPos textPos, const QColor &color, int size)
 {
-    const QPoint realPos = mapCoord2Real(pos.x(), pos.y());
+    const QPointF realPos = mapCoord2Real(pos.x(), pos.y());
 
     QFont font;
     font.setFamily(FONT_FAMILY);
@@ -186,7 +204,7 @@ void MainWindow::addText(const QPoint &pos, const QString &str, MainWindow::Text
     const int textWidth = fm.width(str);
     const int textHeight = fm.height();
 
-    QPoint delta(0, 0);
+    QPointF delta(0, 0);
 
     if (textPos & Top)
     {
